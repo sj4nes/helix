@@ -282,8 +282,8 @@ impl<T> Picker<T> {
 //  - score all the names in relation to input
 
 fn inner_rect(area: Rect) -> Rect {
-    let padding_vertical = area.height * 10 / 100;
-    let padding_horizontal = area.width * 10 / 100;
+    let padding_vertical = area.height * 5 / 100;
+    let padding_horizontal = area.width * 5 / 100;
 
     Rect::new(
         area.x + padding_horizontal,

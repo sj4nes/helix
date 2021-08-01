@@ -71,6 +71,7 @@ pub struct Editor {
 pub enum Action {
     Load,
     Replace,
+    FocusCursor(usize),
     HorizontalSplit,
     VerticalSplit,
 }
@@ -156,6 +157,22 @@ impl Editor {
         }
 
         match action {
+            Action::FocusCursor(line_no) => {
+                let (view, doc) = current!(self);
+                // initialize selection for view
+                doc.selections
+                    .entry(view.id)
+                    .or_insert_with(|| Selection::point(line_no));
+                // TODO: reuse align_view
+                let pos = doc
+                    .selection(view.id)
+                    .primary()
+                    .cursor(doc.text().slice(..));
+                let line = doc.text().char_to_line(pos);
+                view.first_line = line.saturating_sub(view.area.height as usize / 2);
+
+                return;
+            }
             Action::Replace => {
                 let view = view!(self);
                 let jump = (

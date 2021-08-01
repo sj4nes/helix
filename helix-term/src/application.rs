@@ -92,6 +92,7 @@ impl Application {
 
         if !args.files.is_empty() {
             let first = &args.files[0]; // we know it's not empty
+            let remember_first = first.clone();
             if first.is_dir() {
                 editor.new_file(Action::VerticalSplit);
                 compositor.push(Box::new(ui::file_picker(first.clone())));
@@ -105,9 +106,23 @@ impl Application {
                         ));
                     } else {
                         editor.open(file.to_path_buf(), Action::Load)?;
+                        if let Some(line_no) = args.open_at_line_no {
+                            if *remember_first == file {
+                                use std::num::NonZeroUsize;
+                                let mut cx = crate::commands::Context {
+                                    selected_register: crate::helix_view::register_selection::RegisterSelection::default(),
+                                    count: NonZeroUsize::new(line_no),
+                                    editor: &mut editor,
+                                    callback: None,
+                                    on_next_key_callback: None,
+                                    jobs: &mut Jobs::default(),
+                                };
+                                compositor.handle_event(Event::Key(KeyCode::Down), cx);
+                            }
+                        }
                     }
+                    editor.set_status(format!("Loaded {} files.", nr_of_files));
                 }
-                editor.set_status(format!("Loaded {} files.", nr_of_files));
             }
         } else {
             editor.new_file(Action::VerticalSplit);

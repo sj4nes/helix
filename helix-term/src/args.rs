@@ -1,53 +1,48 @@
-use anyhow::{Error, Result};
+use anyhow::Result;
+use clap::{App, Arg};
+
 use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct Args {
-    pub display_help: bool,
-    pub display_version: bool,
     pub verbosity: u64,
     pub files: Vec<PathBuf>,
+    pub open_at_line_no: Option<usize>,
 }
 
 impl Args {
     pub fn parse_args() -> Result<Args> {
         let mut args = Args::default();
-        let argv: Vec<String> = std::env::args().collect();
-        let mut iter = argv.iter();
+        let matches = App::new(env!("CARGO_PKG_NAME"))
+            .version(env!("CARGO_PKG_VERSION"))
+            .author(env!("CARGO_PKG_AUTHORS"))
+            .about(env!("CARGO_PKG_DESCRIPTION"))
+            .arg(
+                Arg::with_name("v")
+                    .short("v")
+                    .multiple(true)
+                    .help("Sets level of verbosity"),
+            )
+            .arg(
+                Arg::with_name("line_no")
+                    .short("+")
+                    .long("line-no")
+                    .takes_value(true)
+                    .help("Sets line number to open first FILE at"),
+            )
+            .arg(Arg::with_name("FILE").index(1).multiple(true))
+            .get_matches();
 
-        iter.next(); // skip the program, we don't care about that
-
-        for arg in &mut iter {
-            match arg.as_str() {
-                "--" => break, // stop parsing at this point treat the remaining as files
-                "--version" => args.display_version = true,
-                "--help" => args.display_help = true,
-                arg if arg.starts_with("--") => {
-                    return Err(Error::msg(format!(
-                        "unexpected double dash argument: {}",
-                        arg
-                    )))
-                }
-                arg if arg.starts_with('-') => {
-                    let arg = arg.get(1..).unwrap().chars();
-                    for chr in arg {
-                        match chr {
-                            'v' => args.verbosity += 1,
-                            'V' => args.display_version = true,
-                            'h' => args.display_help = true,
-                            _ => return Err(Error::msg(format!("unexpected short arg {}", chr))),
-                        }
-                    }
-                }
-                arg => args.files.push(PathBuf::from(arg)),
-            }
+        args.verbosity = matches.occurrences_of("v");
+        if let Some(files) = matches.values_of("FILE") {
+            args.files = files.map(|filename| PathBuf::from(filename)).collect();
         }
-
-        // push the remaining args, if any to the files
-        for filename in iter {
-            args.files.push(PathBuf::from(filename));
+        if let Some(line_no) = matches.value_of("line_no") {
+            args.open_at_line_no = match str::parse::<usize>(&line_no) {
+                Err(_) => None,
+                Ok(line_no) => Some(line_no),
+            };
         }
-
         Ok(args)
     }
 }
