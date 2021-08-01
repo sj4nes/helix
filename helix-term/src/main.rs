@@ -41,43 +41,7 @@ async fn main() -> Result<()> {
     }
 
     let logpath = cache_dir.join("helix.log");
-    let help = format!(
-        "\
-{} {}
-{}
-{}
-
-USAGE:
-    hx [FLAGS] [files]...
-
-ARGS:
-    <files>...    Sets the input file to use
-
-FLAGS:
-    -h, --help       Prints help information
-    -v               Increases logging verbosity each use for up to 3 times
-                     (default file: {})
-    -V, --version    Prints version information
-",
-        env!("CARGO_PKG_NAME"),
-        env!("CARGO_PKG_VERSION"),
-        env!("CARGO_PKG_AUTHORS"),
-        env!("CARGO_PKG_DESCRIPTION"),
-        logpath.display(),
-    );
-
     let args = Args::parse_args().context("could not parse arguments")?;
-
-    // Help has a higher priority and should be handled separately.
-    if args.display_help {
-        print!("{}", help);
-        std::process::exit(0);
-    }
-
-    if args.display_version {
-        println!("helix {}", env!("CARGO_PKG_VERSION"));
-        std::process::exit(0);
-    }
 
     let conf_dir = helix_core::config_dir();
     if !conf_dir.exists() {
