@@ -117,7 +117,7 @@ impl Application {
                                     on_next_key_callback: None,
                                     jobs: &mut Jobs::default(),
                                 };
-                                compositor.handle_event(Event::Key(crate::helix_view::KeyCode::Down), cx);
+                                // compositor.handle_event(Event::Key(crate::helix_view::KeyCode::Down), cx);
                             }
                         }
                     }
